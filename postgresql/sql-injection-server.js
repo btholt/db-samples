@@ -1,0 +1,37 @@
+const express = require("express");
+const { Pool } = require("pg");
+const pool = new Pool({
+  connectionString:
+    "postgresql://postgres:mysecretpassword@localhost:5432/message_boards",
+});
+
+async function init() {
+  const app = express();
+
+  app.get("/get", async (req, res) => {
+    const client = await pool.connect();
+    const [commentsRes, boardRes] = await Promise.all([
+      client.query(
+        `SELECT * FROM comments NATURAL LEFT JOIN rich_content WHERE board_id = ${req.query.search}`
+        // "SELECT * FROM comments NATURAL LEFT JOIN rich_content WHERE board_id = $1",
+        // [req.query.search]
+      ),
+      client.query("SELECT * FROM boards WHERE board_id = $1", [
+        // req.query.search,
+        39,
+      ]),
+    ]);
+    res
+      .json({
+        status: "ok",
+        board: boardRes.rows[0] || {},
+        posts: commentsRes,
+      })
+      .end();
+    await client.end();
+  });
+
+  app.use(express.static("./static"));
+  app.listen(process.env.PORT || 3000);
+}
+init();
