@@ -31,7 +31,10 @@ async function init() {
     await client.end();
   });
 
+  const PORT = process.env.PORT || 3000;
   app.use(express.static("./static"));
-  app.listen(process.env.PORT || 3000);
+  app.listen(PORT);
+
+  console.log(`running on http://localhost:${PORT}`);
 }
 init();
